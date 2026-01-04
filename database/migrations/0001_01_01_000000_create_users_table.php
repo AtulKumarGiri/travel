@@ -13,10 +13,31 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+
             $table->string('name');
             $table->string('email')->unique();
-            $table->timestamp('email_verified_at')->nullable();
+
+            $table->string('country_code', 5);
+            $table->string('mobile', 15)->unique();
+
             $table->string('password');
+
+            $table->string('location')->nullable();
+
+            $table->string('otp', 10)->nullable();
+
+            // yes / no flag
+            $table->boolean('email_verified')->default(false);
+
+            // admin | partner | supplier | customer | employee
+            $table->string('role')->default('customer');
+
+            // active | inactive | blocked
+            $table->string('status')->default('active');
+
+            // user login state
+            $table->boolean('logged_in')->default(false);
+
             $table->rememberToken();
             $table->timestamps();
         });

@@ -1,7 +1,24 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\DashboardController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', function () { return view('front.index');})->name('home');
+Route::get('/login', [UserController::class, 'showLogin'])->name('login');
+Route::post('/login', [UserController::class, 'login'])->name('login.submit');
+Route::get('/logout', [UserController::class, 'logout'])->name('logout');
+
+Route::get('/register', function () { return view('auth.register');})->name('register');
+Route::post('/register', function () { return redirect()->route('dashboard');})->name('register.submit');
+Route::get('/dashboard', function () { return view('dashboard');})->name('dashboard');
+
+Route::get('/create-admin', [UserController::class, 'createAdmin']);
+Route::get('/create-partner', [UserController::class, 'createPartner']);
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+// Role-based dashboards
+Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+Route::get('/partner/dashboard', [DashboardController::class, 'index'])->name('partner.dashboard');
+Route::get('/supplier/dashboard', [DashboardController::class, 'index'])->name('supplier.dashboard');
+Route::get('/employee/dashboard', [DashboardController::class, 'index'])->name('employee.dashboard');
