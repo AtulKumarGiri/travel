@@ -79,25 +79,55 @@
                 </li>
 
                 <!-- User -->
-                <li class="nav-item">
-                    <span class="nav-link text-white text-uppercase">
+                <li class="nav-item dropdown">
+                    <a
+                        class="nav-link dropdown-toggle text-white text-uppercase"
+                        href="#"
+                        id="userDropdown"
+                        role="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                    >
+                        <i class="bi bi-person-circle me-1"></i>
                         {{ session('auth_user')->name ?? '' }}
                         ({{ ucfirst(session('auth_user')->role ?? '') }})
-                    </span>
-                </li>
-
-                <!-- Logout -->
-                <li class="nav-item bg-danger rounded ms-2 px-2">
-                    <a
-                        href="#"
-                        class="nav-link text-white fw-bold"
-                        data-bs-toggle="modal"
-                        data-bs-target="#logoutConfirmModal"
-                    >
-                        Logout
                     </a>
-                </li>
 
+                    <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                        <!-- Profile -->
+                        <li>
+                            <a class="dropdown-item" href="{{ route('profile') }}">
+                                <i class="bi bi-person me-2"></i>
+                                Profile
+                            </a>
+                        </li>
+
+                        <!-- Settings -->
+                        <li>
+                            <a class="dropdown-item" href="{{ route('settings') }}">
+                                <i class="bi bi-gear me-2"></i>
+                                Settings
+                            </a>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- Logout -->
+                        <li>
+                            <a
+                                class="dropdown-item text-danger fw-bold"
+                                href="#"
+                                data-bs-toggle="modal"
+                                data-bs-target="#logoutConfirmModal"
+                            >
+                                <i class="bi bi-box-arrow-right me-2"></i>
+                                Logout
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
 
             </ul>
         </div>

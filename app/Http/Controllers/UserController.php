@@ -110,5 +110,41 @@ class UserController extends Controller
         return redirect()->route('login')->with('success', 'Logged out successfully');
     }
 
+    public function profile(){
+        $user = session('auth_user');
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        return view('common.profile', compact('user'));
+    }
+
+    public function updatePassword(Request $request){
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|min:6|confirmed',
+        ]);
+
+        $user = User::findOrFail(session('auth_user')->id);
+
+        if (!Hash::check($request->current_password, $user->password)) {
+            return back()->withErrors(['current_password' => 'Current password is incorrect']);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->new_password),
+        ]);
+
+        return back()->with('success', 'Password updated successfully');
+    }
+
+
+    public function settings()
+    {
+        return view('users.settings');
+    }
+
+
 
 }

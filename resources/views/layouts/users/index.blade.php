@@ -32,6 +32,31 @@
         </div>
     </div>
 
+    <!-- Inactivity Warning Modal -->
+    <div class="modal fade" id="inactivityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title text-dark">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Session Expiring
+                    </h5>
+                </div>
+
+                <div class="modal-body text-center">
+                    <p class="mb-2">
+                        You have been inactive for a while.
+                    </p>
+                    <p class="fw-bold text-danger mb-0">
+                        Logging out in <span id="logoutCountdown">60</span> seconds
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         const toggleBtn = document.getElementById('sidebarToggle');
@@ -86,12 +111,64 @@
                 now.toLocaleString('en-IN', options);
         }
 
-        // Initial load
         updateLiveDateTime();
-
-        // Update every second
         setInterval(updateLiveDateTime, 1000);
-        </script>
+
+        let inactivityTimer;
+        let warningTimer;
+        let countdownTimer;
+
+        const logoutAfter = 10 * 60 * 1000;     // 10 minutes
+        const warningAfter = 9 * 60 * 1000;  // 30 seconds
+        let countdownSeconds = 60;
+
+        const inactivityModal = new bootstrap.Modal(
+            document.getElementById('inactivityModal'),
+            { backdrop: 'static', keyboard: false }
+        );
+
+        function resetTimers() {
+            clearTimeout(inactivityTimer);
+            clearTimeout(warningTimer);
+            clearInterval(countdownTimer);
+
+            inactivityModal.hide();
+            countdownSeconds = 60;
+            document.getElementById('logoutCountdown').innerText = countdownSeconds;
+
+            warningTimer = setTimeout(showWarningModal, warningAfter);
+
+            inactivityTimer = setTimeout(() => {
+                window.location.href = "{{ route('logout') }}";
+            }, logoutAfter);
+        }
+
+        function showWarningModal() {
+            inactivityModal.show();
+
+            countdownTimer = setInterval(() => {
+                countdownSeconds--;
+                document.getElementById('logoutCountdown').innerText = countdownSeconds;
+
+                if (countdownSeconds <= 0) {
+                    clearInterval(countdownTimer);
+                    window.location.href = "{{ route('logout') }}";
+                }
+            }, 1000);
+        }
+
+        document.getElementById('stayLoggedInBtn').addEventListener('click', () => {
+            resetTimers();
+        });
+
+        ['click','mousemove','keypress','scroll'].forEach(event => {
+            document.addEventListener(event, resetTimers);
+        });
+
+        resetTimers();
+
+    </script>
+
 
 
 

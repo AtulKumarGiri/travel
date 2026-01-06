@@ -22,3 +22,8 @@ Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('adm
 Route::get('/partner/dashboard', [DashboardController::class, 'index'])->name('partner.dashboard');
 Route::get('/supplier/dashboard', [DashboardController::class, 'index'])->name('supplier.dashboard');
 Route::get('/employee/dashboard', [DashboardController::class, 'index'])->name('employee.dashboard');
+Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+Route::get('/profile/edit', [UserController::class, 'edit'])->name('profile.edit');
+Route::get('/change-password', [UserController::class, 'showChangePassword'])->name('password.change');
+Route::post('/change-password', [UserController::class, 'updatePassword'])->name('password.update');
+Route::get('/settings', [UserController::class, 'settings'])->name('settings');
