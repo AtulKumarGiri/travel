@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Admin\CmsPageController;
 
 Route::get('/', function () { return view('front.index');})->name('home');
 Route::get('/login', [UserController::class, 'showLogin'])->name('login');
@@ -27,3 +28,17 @@ Route::get('/profile/edit', [UserController::class, 'edit'])->name('profile.edit
 Route::get('/change-password', [UserController::class, 'showChangePassword'])->name('password.change');
 Route::post('/change-password', [UserController::class, 'updatePassword'])->name('password.update');
 Route::get('/settings', [UserController::class, 'settings'])->name('settings');
+
+
+/* Admin CMS */
+Route::middleware(['web'])->group(function () {
+    Route::get('/admin/cms', [CmsPageController::class, 'index'])->name('cms.index');
+    Route::get('/admin/cms/create', [CmsPageController::class, 'create'])->name('cms.create');
+    Route::post('/admin/cms/store', [CmsPageController::class, 'store'])->name('cms.store');
+    Route::post('/admin/cms/destroy', [CmsPageController::class, 'destroy'])->name('cms.destroy');
+    Route::get('/admin/cms/{id}/edit', [CmsPageController::class, 'edit'])->name('cms.edit');
+    Route::put('/admin/cms/{id}', [CmsPageController::class, 'update'])->name('cms.update');
+});
+
+/* Frontend CMS pages */
+Route::get('/{slug}', [CmsPageController::class, 'show'])->name('cms.show');
