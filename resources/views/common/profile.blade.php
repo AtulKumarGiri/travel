@@ -6,12 +6,29 @@
         <div class="col-lg-12 mx-auto">
 
             <div class="card shadow-sm">
-                <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">My Profile</h5>
+                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-dark p-1 d-flex align-items-center justify-content-center fw-bold text-white">
+                            <h5 class="mb-0 text-uppercase text-light fs-5">My Profile</h5>
+                        
+                            @if($completionPercent < 100)
+                                <span class="rounded-circle bg-warning text-dark fw-bold mx-2 ms-4"
+                                    style="padding:5px; height:38px; width:38px; display:flex; align-items:center; justify-content:center;">
+                                    {{ $completionPercent }}%
+                                </span> Completed
+                            @else
+                                <span class="rounded-circle bg-success fw-bold"
+                                    style="padding:5px; height:38px; width:38px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="bi bi-check-circle"></i>
+                                </span>
+                            @endif
+                        </div>
+
+                    </div>
 
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">
-                            Actions
+                        <button class="btn btn-sm btn-outline-light dropdown-toggle text-uppercase fw-bold" data-bs-toggle="dropdown">
+                            Look Here
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
@@ -24,9 +41,15 @@
                                     <i class="bi bi-shield-lock me-2"></i> Change Password
                                 </a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                                    <i class="bi bi-person-check-fill me-2"></i> Complete Profile
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
+
 
 
                 <div class="card-body">

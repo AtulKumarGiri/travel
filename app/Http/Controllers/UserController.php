@@ -111,14 +111,45 @@ class UserController extends Controller
     }
 
     public function profile(){
-        $user = session('auth_user');
+        $sessionUser = session('auth_user');
+
+        if (!$sessionUser) {
+            return redirect()->route('login');
+        }
+
+        $user = \App\Models\User::find($sessionUser->id);
 
         if (!$user) {
             return redirect()->route('login');
         }
 
-        return view('common.profile', compact('user'));
+        // Required fields for partner company profile
+        $requiredFields = [
+            'name',
+            'email',
+            'mobile',
+            'company_name',
+            'company_address',
+            'city',
+            'state',
+            'country',
+            'pincode',
+        ];
+
+        $completed = 0;
+
+        foreach ($requiredFields as $field) {
+            if (!empty($user->{$field})) {
+                $completed++;
+            }
+        }
+
+        $total = count($requiredFields);
+        $completionPercent = $total > 0 ? round(($completed / $total) * 100) : 0;
+
+        return view('common.profile', compact('user', 'completionPercent'));
     }
+
 
     public function updatePassword(Request $request){
         $request->validate([
