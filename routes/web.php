@@ -42,3 +42,8 @@ Route::middleware(['web'])->group(function () {
 
 /* Frontend CMS pages */
 Route::get('/{slug}', [CmsPageController::class, 'show'])->name('cms.show');
+Route::get('/documents/create', [UserController::class, 'createDocument'])->name('documents.create');
+Route::get('/documents/edit', [UserController::class, 'editDocument'])->name('documents.edit');
+Route::get('/documents/show/{id}', [UserController::class, 'showDocument'])->name('documents.show');
+Route::post('/documents/autosave', [UserController::class, 'autosave'])->name('documents.autosave');
+Route::get('/admin/documents', [UserController::class, 'documentsIndex'])->name('documents.index');

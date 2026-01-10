@@ -95,8 +95,20 @@
             <i class="bi bi-chevron-down small"></i>
         </a>
         <ul class="collapse ps-4" id="operationsModule">
-            <li><a href="#">Inventory</a></li>
-            <li><a href="#">Deliveries</a></li>
+            <li><a href="#">Accomodation</a></li>
+            <li><a href="#">Activities</a></li>
+            <li><a href="#">Category</a></li>
+            <li><a href="#">Country</a></li>
+            <li><a href="#">City</a></li>
+            <li><a href="#">Confirmation Days</a></li>
+            <li><a href="#">Currency</a></li>
+            <li><a href="#">Guide</a></li>
+            <li><a href="#">Language</a></li>
+            <li><a href="#">Meal Plan</a></li>
+            <li><a href="#">Packages</a></li>
+            <li><a href="#">Preferences</a></li>
+            <li><a href="#">Refund Days</a></li>
+            <li><a href="#">Transfer Type</a></li>
         </ul>
     </li>
     @endif
@@ -114,6 +126,7 @@
         </a>
         <ul class="collapse ps-4" id="employeeModule">
             <li><a href="#">Tasks</a></li>
+            <li><a href="{{ route('documents.index') }}">Documents</a></li>
             <li><a href="#">Reports</a></li>
         </ul>
     </li>

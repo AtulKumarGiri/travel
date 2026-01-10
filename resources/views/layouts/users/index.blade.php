@@ -7,6 +7,8 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-lite.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('assets/css/style.css') }}">
 </head>
 <body class="d-flex flex-column vh-100">
@@ -56,118 +58,225 @@
         </div>
     </div>
 
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-lite.min.js"></script>
+
     <script>
-        const toggleBtn = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        const mainContent = document.getElementById('main-content');
-        const icon = document.getElementById('sidebarIcon');
+        document.addEventListener('DOMContentLoaded', function() {
 
-        toggleBtn.addEventListener('click', () => {
-            const isCollapsed = sidebar.classList.toggle('collapsed');
+            // ================= Sidebar Toggle =================
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('main-content');
+            const icon = document.getElementById('sidebarIcon');
 
-            mainContent.classList.toggle('expanded');
+            if(toggleBtn && sidebar && mainContent && icon){
+                toggleBtn.addEventListener('click', () => {
+                    const isCollapsed = sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('expanded');
 
-            // Toggle icon
-            if (isCollapsed) {
-                icon.classList.remove('bi-list');
-                icon.classList.add('bi-x-lg');
-            } else {
-                icon.classList.remove('bi-x-lg');
-                icon.classList.add('bi-list');
+                    // Toggle icon
+                    if (isCollapsed) {
+                        icon.classList.remove('bi-list');
+                        icon.classList.add('bi-x-lg');
+                    } else {
+                        icon.classList.remove('bi-x-lg');
+                        icon.classList.add('bi-list');
+                    }
+                });
             }
-        });
 
-        document.getElementById('activeUsersCanvas')
-            .addEventListener('show.bs.offcanvas', function () {
-                document.querySelector('.bi-people-fill')
-                    .closest('button')
-                    .classList.add('btn-success');
-            });
+            // ================= Active Users Canvas =================
+            const activeCanvas = document.getElementById('activeUsersCanvas');
+            if(activeCanvas){
+                activeCanvas.addEventListener('show.bs.offcanvas', function () {
+                    document.querySelector('.bi-people-fill').closest('button').classList.add('btn-success');
+                });
+                activeCanvas.addEventListener('hidden.bs.offcanvas', function () {
+                    document.querySelector('.bi-people-fill').closest('button').classList.remove('btn-success');
+                });
+            }
 
-        document.getElementById('activeUsersCanvas')
-            .addEventListener('hidden.bs.offcanvas', function () {
-                document.querySelector('.bi-people-fill')
-                    .closest('button')
-                    .classList.remove('btn-success');
-            });
+            // ================= Live Date/Time =================
+            function updateLiveDateTime() {
+                const now = new Date();
+                const options = {
+                    weekday: 'short', year: 'numeric', month: 'short', day: '2-digit',
+                    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                };
+                const dtEl = document.getElementById('liveDateTime');
+                if(dtEl) dtEl.innerText = now.toLocaleString('en-IN', options);
+            }
+            updateLiveDateTime();
+            setInterval(updateLiveDateTime, 1000);
 
-        function updateLiveDateTime() {
-            const now = new Date();
+            // ================= Inactivity Logout =================
+            let inactivityTimer, warningTimer, countdownTimer;
+            const logoutAfter = 10*60*1000;   // 10 minutes
+            const warningAfter = 9*60*1000;   // 9 minutes
+            let countdownSeconds = 60;
 
-            const options = {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-            };
+            const inactivityModalEl = document.getElementById('inactivityModal');
+            const inactivityModal = inactivityModalEl ? new bootstrap.Modal(inactivityModalEl, {backdrop:'static', keyboard:false}) : null;
 
-            document.getElementById('liveDateTime').innerText =
-                now.toLocaleString('en-IN', options);
-        }
+            function resetTimers(){
+                clearTimeout(inactivityTimer);
+                clearTimeout(warningTimer);
+                clearInterval(countdownTimer);
 
-        updateLiveDateTime();
-        setInterval(updateLiveDateTime, 1000);
+                if(inactivityModal) inactivityModal.hide();
+                countdownSeconds = 60;
+                const countdownEl = document.getElementById('logoutCountdown');
+                if(countdownEl) countdownEl.innerText = countdownSeconds;
 
-        let inactivityTimer;
-        let warningTimer;
-        let countdownTimer;
+                warningTimer = setTimeout(showWarningModal, warningAfter);
 
-        const logoutAfter = 10 * 60 * 1000;     // 10 minutes
-        const warningAfter = 9 * 60 * 1000;  // 30 seconds
-        let countdownSeconds = 60;
-
-        const inactivityModal = new bootstrap.Modal(
-            document.getElementById('inactivityModal'),
-            { backdrop: 'static', keyboard: false }
-        );
-
-        function resetTimers() {
-            clearTimeout(inactivityTimer);
-            clearTimeout(warningTimer);
-            clearInterval(countdownTimer);
-
-            inactivityModal.hide();
-            countdownSeconds = 60;
-            document.getElementById('logoutCountdown').innerText = countdownSeconds;
-
-            warningTimer = setTimeout(showWarningModal, warningAfter);
-
-            inactivityTimer = setTimeout(() => {
-                window.location.href = "{{ route('logout') }}";
-            }, logoutAfter);
-        }
-
-        function showWarningModal() {
-            inactivityModal.show();
-
-            countdownTimer = setInterval(() => {
-                countdownSeconds--;
-                document.getElementById('logoutCountdown').innerText = countdownSeconds;
-
-                if (countdownSeconds <= 0) {
-                    clearInterval(countdownTimer);
+                inactivityTimer = setTimeout(() => {
                     window.location.href = "{{ route('logout') }}";
-                }
-            }, 1000);
-        }
+                }, logoutAfter);
+            }
 
-        document.getElementById('stayLoggedInBtn').addEventListener('click', () => {
+            function showWarningModal(){
+                if(inactivityModal) inactivityModal.show();
+                countdownTimer = setInterval(() => {
+                    countdownSeconds--;
+                    const countdownEl = document.getElementById('logoutCountdown');
+                    if(countdownEl) countdownEl.innerText = countdownSeconds;
+
+                    if(countdownSeconds <= 0){
+                        clearInterval(countdownTimer);
+                        window.location.href = "{{ route('logout') }}";
+                    }
+                }, 1000);
+            }
+
+            const stayBtn = document.getElementById('stayLoggedInBtn');
+            if(stayBtn) stayBtn.addEventListener('click', resetTimers);
+
+            ['click','mousemove','keypress','scroll'].forEach(event => {
+                document.addEventListener(event, resetTimers);
+            });
+
             resetTimers();
+
         });
-
-        ['click','mousemove','keypress','scroll'].forEach(event => {
-            document.addEventListener(event, resetTimers);
+        document.addEventListener('DOMContentLoaded', function() {
+            let currentDocumentId = null; // tracks active document in modal
+            let autosaveTimer;
+            let isTyping = false;
+            // ================= Initialize Summernote & Select2 =================
+            $('#docDescription').summernote({
+                placeholder: 'Write details...',
+                tabsize: 2,
+                height: 300,
+                minHeight: 200,
+                toolbar: [
+                    ['style', ['bold', 'italic', 'underline', 'clear']],
+                    ['font', ['fontsize', 'color']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['insert', ['link', 'table']],
+                    ['view', ['codeview']]
+                ]
+            });
+            $('#shareUsers').select2({
+                placeholder: "Share With Employees...",
+                allowClear: true,
+                width: '100%'
+            });
+            // ================= Privacy Toggle =================
+            function handlePrivacySwitch(){
+                let value = $('input[name="privacyOptions"]:checked').val();
+                $('#privacyStatus').html(`✓ ${value.charAt(0).toUpperCase() + value.slice(1)}`);
+                if(value === 'shared'){
+                    $('#shareUsersWrapper').removeClass('d-none').addClass('d-block');
+                } else {
+                    $('#shareUsersWrapper').removeClass('d-block').addClass('d-none');
+                    $('#shareUsers').val(null).trigger('change');
+                }
+            }
+            $('input[name="privacyOptions"]').on('change', handlePrivacySwitch);
+            function showSavingStatus(){
+                $('#autosaveStatus').html('<i class="bi bi-arrow-repeat text-warning"></i> Saving...');
+            }
+            function triggerAutosave(){
+                clearTimeout(autosaveTimer);
+                autosaveTimer = setTimeout(autosaveDocument, 1500);
+            }
+            function autosaveDocument(){
+                if(!isTyping) return;
+    
+                let title = $('#docTitle').val().trim();
+                let body = $('#docDescription').summernote('code').trim().replace(/<[^>]*>?/gm, '');
+                if(!title && !body) {
+                    return;
+                }
+                let payload = {
+                    document_id: currentDocumentId,
+                    title: $('#docTitle').val(),
+                    body: $('#docDescription').summernote('code'),
+                    type: $('#docType').val(),
+                    shared_with: $('#shareUsers').val(),
+                    is_private: $('input[name="privacyOptions"]:checked').val() === 'private' ? 1 : 0,
+                    _token: '{{ csrf_token() }}'
+                };
+                $.post("{{ route('documents.autosave') }}", payload, function(response){
+                    if(response.status === 'saved'){
+                        $('#autosaveStatus').html(`<i class="bi bi-check-circle-fill text-success"></i> Saved at ${new Date(response.updated_at).toLocaleTimeString()}`);
+                        currentDocumentId = response.document_id;
+                        isTyping = false;
+                    }
+                });
+            }
+            // Track changes
+            $('#docTitle, #docType, #shareUsers').on('input change', function(){
+                isTyping = true;
+                showSavingStatus();
+                triggerAutosave();
+            });
+            $('#docDescription').on('summernote.change', function(){
+                isTyping = true;
+                showSavingStatus();
+                triggerAutosave();
+            });
+            // ================= Modal Open / Close =================
+            $('#createDocumentModal').on('shown.bs.modal', function () {
+                // Reset modal fields for a new document
+                currentDocumentId = null;
+                isTyping = false;
+                $('#docTitle').val('');
+                $('#docType').val('general');
+                $('#docDescription').summernote('reset'); // clears Summernote
+                $('input[name="privacyOptions"][value="private"]').prop('checked', true);
+                handlePrivacySwitch();
+                $('#autosaveStatus').html('<i class="bi bi-arrow-repeat"></i> Auto-save enabled...');
+            });
+            // ================= Save Button =================
+            $('#saveDocument').on('click', function(){
+                showSavingStatus();
+                let payload = {
+                    document_id: currentDocumentId,
+                    title: $('#docTitle').val(),
+                    body: $('#docDescription').summernote('code'),
+                    type: $('#docType').val(),
+                    shared_with: $('#shareUsers').val(),
+                    is_private: $('input[name="privacyOptions"]:checked').val() === 'private' ? 1 : 0,
+                    _token: '{{ csrf_token() }}'
+                };
+                $.post("{{ route('documents.autosave') }}", payload, function(response){
+                    if(response.status === 'saved'){
+                        $('#autosaveStatus').html(`<i class="bi bi-check-circle-fill text-success"></i> Saved at ${new Date(response.updated_at).toLocaleTimeString()}`);
+                        currentDocumentId = null; // Reset for next document
+                        $('#createDocumentModal').modal('hide'); // Close modal
+                    }
+                });
+            });
         });
-
-        resetTimers();
-
     </script>
+
+
+
 
 
 

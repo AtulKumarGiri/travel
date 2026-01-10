@@ -48,3 +48,39 @@
 #main-content.expanded {
     margin-left: 0;
 }
+.privacy-toggle {
+    overflow: hidden;
+}
+
+.privacy-toggle .btn {
+    padding: 3px 14px;
+    font-size: 13px;
+    color: #dcdcdc;
+    background: #ffffff;
+    border: none;
+    transition: 0.2s ease;
+}
+
+.privacy-toggle .btn:hover {
+    background: #3c3c3c;
+    color: #fff;
+}
+
+.privacy-toggle .btn-check:checked + .btn {
+    background: #0d6efd; 
+    color: #fff;
+    font-weight: 600;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+}
+
+.select2-container .select2-selection--multiple {
+    min-height: 34px !important;
+    padding: 4px !important;
+    border-radius: 6px;
+}
+.select2-selection__choice {
+    background: #0d6efd !important;
+    color: white !important;
+    border: none !important;
+    font-size: 12px;
+}

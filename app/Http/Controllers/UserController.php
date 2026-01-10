@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Documents;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 class UserController extends Controller
@@ -150,7 +151,6 @@ class UserController extends Controller
         return view('common.profile', compact('user', 'completionPercent'));
     }
 
-
     public function updatePassword(Request $request){
         $request->validate([
             'current_password' => 'required',
@@ -170,11 +170,80 @@ class UserController extends Controller
         return back()->with('success', 'Password updated successfully');
     }
 
-
-    public function settings()
-    {
+    public function settings(){
         return view('users.settings');
     }
+
+    public function autosave(Request $request){
+        $request->validate([
+            'document_id' => 'nullable|integer',
+            'title'       => 'nullable|string|max:255',
+            'body'        => 'nullable|string',
+            'type'        => 'nullable|string',
+            'shared_with' => 'nullable|array',
+            'is_private'  => 'nullable|boolean'
+        ]);
+
+        $sessionUser = session('auth_user');
+
+        // Only create/update if the user typed something
+        if(!$request->title && !$request->body) {
+            return response()->json(['status' => 'empty', 'message' => 'No data to save']);
+        }
+
+        $doc = Documents::updateOrCreate(
+            ['id' => $request->document_id],
+            [
+                'title'       => $request->title,
+                'body'        => $request->body,
+                'type'        => $request->type,
+                'shared_with' => $request->shared_with,
+                'created_by'  => $request->document_id ? $sessionUser->id : $sessionUser->id,
+                'is_private'  => $request->is_private,
+                'updated_by'  => $sessionUser->id
+            ]
+        );
+
+        return response()->json([
+            'status'      => 'saved',
+            'document_id' => $doc->id,
+            'updated_at'  => $doc->updated_at
+        ]);
+    }
+
+    public function documentsIndex(){
+
+        $userId = session('auth_user')->id;
+
+        $documents = Documents::where(function($q) use ($userId) {
+                $q->where('created_by', $userId);   // created by me
+            })
+            ->orWhere(function($q) use ($userId) {
+                $q->where('is_private', 0)          // is shared
+                ->whereJsonContains('shared_with', $userId); // shared with me
+            })
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        return view('common.documents.index', compact('documents'));
+    }
+
+    public function createDocument(){
+        return view('common.documents.create');
+    }
+
+    public function showDocument($id){
+        $document = Documents::find($id);
+
+        if (!$document) {
+            return redirect()->route('documents.index')->with('error', 'Document not found');
+        }
+
+        return view('common.documents.show', compact('document'));
+    }
+
+
+
 
 
 

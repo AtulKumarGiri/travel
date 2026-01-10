@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-    <div class="container-fluid">
+    <div class="container-fluid my-1">
 
         <!-- Brand -->
         <a class="navbar-brand text-uppercase" href="{{ route('dashboard') }}">
@@ -40,6 +40,17 @@
                         --:--:--
                     </span>
                 </li>
+                
+                <a href="{{ route('documents.create') }}" class="btn btn-outline-light position-relative me-3">
+                    <i class="bi bi-file-earmark"></i>
+                    <span
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success"
+                        style="font-size: 1rem; padding: 1px 5px; padding-bottom: 3px;"
+                    >
+                        +
+                    </span>
+                </a>
+
 
                 @php
                     $authUser = session('auth_user');
