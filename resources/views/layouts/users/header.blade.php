@@ -114,14 +114,6 @@
                             </a>
                         </li>
 
-                        <!-- Settings -->
-                        <li>
-                            <a class="dropdown-item" href="{{ route('cms.index') }}">
-                                <i class="bi bi-gear me-2"></i>
-                                Settings
-                            </a>
-                        </li>
-
                         <li><hr class="dropdown-divider"></li>
 
                         <!-- Logout -->

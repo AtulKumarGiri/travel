@@ -56,6 +56,46 @@ class UserController extends Controller
         return "Partner created successfully: " . $partner->email;
     }
 
+    public function createEmployees(){
+        // Check how many employees already exist
+        $existing = User::where('role', 'employee')->count();
+
+        if ($existing >= 5) {
+            return "Employees already created (" . $existing . ")";
+        }
+
+        $employees = [
+            ['name' => 'Employee One',   'email' => 'emp1@example.com', 'mobile' => '9876543211'],
+            ['name' => 'Employee Two',   'email' => 'emp2@example.com', 'mobile' => '9876543212'],
+            ['name' => 'Employee Three', 'email' => 'emp3@example.com', 'mobile' => '9876543213'],
+            ['name' => 'Employee Four',  'email' => 'emp4@example.com', 'mobile' => '9876543214'],
+            ['name' => 'Employee Five',  'email' => 'emp5@example.com', 'mobile' => '9876543215'],
+        ];
+
+        foreach ($employees as $data) {
+
+            // Skip if user already exists
+            if (User::where('email', $data['email'])->exists()) {
+                continue;
+            }
+
+            User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'country_code' => '+91',
+                'mobile' => $data['mobile'],
+                'password' => bcrypt('password123'),
+                'location' => 'Head Office',
+                'role' => 'employee',
+                'status' => 'active',
+                'email_verified' => true,
+                'logged_in' => false,
+            ]);
+        }
+
+        return "5 employees created successfully!";
+    }
+
     public function showLogin(){
         return view('auth.login');
     }
@@ -174,42 +214,37 @@ class UserController extends Controller
         return view('users.settings');
     }
 
-    public function autosave(Request $request){
+    public function storeDocument(Request $request){
         $request->validate([
-            'document_id' => 'nullable|integer',
-            'title'       => 'nullable|string|max:255',
-            'body'        => 'nullable|string',
-            'type'        => 'nullable|string',
-            'shared_with' => 'nullable|array',
-            'is_private'  => 'nullable|boolean'
+            'title' => 'required',
+            'body' => 'nullable',
+            'type' => 'required',
         ]);
 
-        $sessionUser = session('auth_user');
+        $creator = session('auth_user')->id;
+        
+        $document = Documents::create([
+            'title'       => $request->title,
+            'body'        => $request->body,
+            'type'        => $request->type,
+            'is_private'  => empty($request->shared_with) ? 1 : 0,
+            'created_by'  => $creator,
+            'updated_by'  => $creator,
+            'status'      => 'active',
+        ]);
 
-        // Only create/update if the user typed something
-        if(!$request->title && !$request->body) {
-            return response()->json(['status' => 'empty', 'message' => 'No data to save']);
+        if (!empty($request->shared_with)) {
+            $document->shareWithUsers($request->shared_with, session('auth_user')->id);
         }
 
-        $doc = Documents::updateOrCreate(
-            ['id' => $request->document_id],
-            [
-                'title'       => $request->title,
-                'body'        => $request->body,
-                'type'        => $request->type,
-                'shared_with' => $request->shared_with,
-                'created_by'  => $request->document_id ? $sessionUser->id : $sessionUser->id,
-                'is_private'  => $request->is_private,
-                'updated_by'  => $sessionUser->id
-            ]
-        );
-
         return response()->json([
-            'status'      => 'saved',
-            'document_id' => $doc->id,
-            'updated_at'  => $doc->updated_at
+            'status' => 'saved',
+            'document_id' => $document->id,
+            'updated_at' => now(),
         ]);
+
     }
+
 
     public function documentsIndex(){
 
@@ -229,7 +264,8 @@ class UserController extends Controller
     }
 
     public function createDocument(){
-        return view('common.documents.create');
+        $users = User::where('id', '!=', session('auth_user')->id)->where('role', '=', 'employee')->get();
+        return view('common.documents.create', compact('users'));
     }
 
     public function showDocument($id){
@@ -240,6 +276,53 @@ class UserController extends Controller
         }
 
         return view('common.documents.show', compact('document'));
+    }
+
+    public function editDocument($id){
+        $document = Documents::with('sharedUsers')->findOrFail($id);
+
+        // Only owner can edit
+        if ($document->created_by != session('auth_user')->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $users = User::where('id', '!=', session('auth_user')->id)->get();
+
+        return view('common.documents.edit', compact('document', 'users'));
+    }
+
+    public function updateDocument(Request $request, $id){
+        $document = Documents::findOrFail($id);
+
+        if ($document->created_by != session('auth_user')->id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $document->update([
+            'title'      => $request->title,
+            'type'       => $request->type,
+            'body'       => $request->body,
+            'is_private' => $request->privacy === 'private' ? 1 : 0,
+        ]);
+
+        // Update shared users
+        if ($request->privacy === 'shared') {
+            $document->sharedUsers()->sync($request->shared_with ?: []);
+        } else {
+            $document->sharedUsers()->detach();
+        }
+
+        return redirect()->route('documents.index', $document->id)->with('success', 'Document updated successfully.');
+    }
+
+
+    public function printDocument($id){
+        $document = Documents::findOrFail($id);
+
+        $pdf = \PDF::loadView('common.documents.print', compact('document'))
+                    ->setPaper('A4', 'portrait');
+
+        return $pdf->download($document->title . '.pdf');
     }
 
 

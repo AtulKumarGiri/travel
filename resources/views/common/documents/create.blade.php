@@ -16,10 +16,13 @@
                 <div id="privacyStatus" class="privacy-status ms-2"></div>
             </div>
 
-
-            <div id="shareUsersWrapper" class="ms-3 d-none col-md-6">
-                <select id="shareUsers" class="form-select form-select-sm" multiple>
-                    <option selected disabled>Share With Employees...</option>
+            <div class="ms-3 d-flex align-items-center flex-row col-md-5" id="docTypeWrapper">
+                <label class="form-label fw-bold col-md-5">Document Type: </label>
+                <select class="form-select" id="docType">
+                    <option value="General">General</option>
+                    <option value="Travel Enquiry">Travel</option>
+                    <option value="Invoice">Invoice</option>
+                    <option value="Booking">Booking</option>
                 </select>
             </div>
         </div>
@@ -41,20 +44,32 @@
             <div class="row align-items-center mb-1">
 
                 <!-- Title -->
-                <div class="col-md-6 mb-2">
+                <div class="col-md-3 mb-2">
                     <label class="form-label fw-bold">Title</label>
                     <input type="text" class="form-control" id="docTitle" placeholder="Document title">
                 </div>
 
                 <!-- Type -->
-                <div class="col-md-6 mb-2">
-                    <label class="form-label fw-bold">Type</label>
-                    <select class="form-select" id="docType">
-                        <option value="general">General</option>
-                        <option value="travel">Travel</option>
-                        <option value="invoice">Invoice</option>
-                        <option value="booking">Booking</option>
-                    </select>
+                
+
+                <div id="shareUsersWrapper" class="d-none col-md-9 d-flex align-items-start mt-0">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold mb-1">Share With Employees</label>
+    
+                        <select id="shareUsers" class="form-select select2 multiple" multiple>
+                            @foreach($users as $user)
+                                <option value="{{ $user->id }}" 
+                                    @if(in_array($user->id, $selectedUsers ?? [])) selected @endif>
+                                    {{ $user->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div id="userPermissions" class="mt-3 ms-4 col-md-6">
+                        <!-- dynamically filled by JS -->
+                    </div>
+                    @include('layouts.other.permission')
                 </div>
 
             </div>

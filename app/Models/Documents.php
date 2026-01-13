@@ -25,25 +25,31 @@ class Documents extends Model
         'shared_with' => 'array', 
     ];
     
-    public function creator()
-    {
+    public function creator(){
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function updater()
-    {
+    public function updater(){
         return $this->belongsTo(User::class, 'updated_by');
     }
-
     
-    public function scopeVisibleTo($query, $userId)
-    {
-        return $query->where(function($q) use ($userId) {
-            $q->where('privacy', 'private')->where('created_by', $userId)
-              ->orWhereJsonContains('shared_with', $userId);
+    public function scopeVisibleTo($query, $userId){
+        return $query->where(function ($q) use ($userId) {
+            $q->where('is_private', 1)->where('created_by', $userId)
+            ->orWhereJsonContains('shared_with', $userId);
         });
+    }    
+
+    public function sharedUsers(){
+        return $this->belongsToMany(User::class, 'document_user', 'document_id', 'user_id')
+            ->withPivot(['shared_by', 'permission'])
+            ->withTimestamps()
+            ->where('users.role', 'employee');
     }
-    
+
+
+
+
     protected static function booted()
     {
         static::creating(function ($document) {

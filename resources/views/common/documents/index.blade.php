@@ -8,7 +8,7 @@
 </div>
 
 <table class="table table-bordered table-striped">
-    <thead>
+    <thead class="text-center">
         <tr>
             <th>#</th>
             <th>Title</th>
@@ -21,7 +21,7 @@
         </tr>
     </thead>
 
-    <tbody>
+    <tbody class="text-center">
         @forelse($documents as $key => $doc)
         <tr>
             <td>{{ $key+1 }}</td>
@@ -30,10 +30,10 @@
             <td>{{ $doc->creator->name ?? 'Unknown' }}</td>
             <td>{{ $doc->updater->name ?? 'Unknown' }}</td>
             <td>
-                @if($doc->sharedUsers)
+                @if($doc->shared_with == 1)
                     <span class="badge bg-info">Yes</span>
                 @else
-                    <span class="text-muted">No</span>
+                    <span class="badge bg-secondary">No</span>
                 @endif
             </td>
             <td>{{ $doc->updated_at->format('d M Y h:i A') }}</td>

@@ -16,6 +16,7 @@ Route::get('/dashboard', function () { return view('dashboard');})->name('dashbo
 
 Route::get('/create-admin', [UserController::class, 'createAdmin']);
 Route::get('/create-partner', [UserController::class, 'createPartner']);
+Route::get('/create-employee', [UserController::class, 'createEmployees']);
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 // Role-based dashboards
@@ -32,18 +33,27 @@ Route::get('/settings', [UserController::class, 'settings'])->name('settings');
 
 /* Admin CMS */
 Route::middleware(['web'])->group(function () {
-    Route::get('/admin/cms', [CmsPageController::class, 'index'])->name('cms.index');
-    Route::get('/admin/cms/create', [CmsPageController::class, 'create'])->name('cms.create');
-    Route::post('/admin/cms/store', [CmsPageController::class, 'store'])->name('cms.store');
-    Route::post('/admin/cms/destroy', [CmsPageController::class, 'destroy'])->name('cms.destroy');
-    Route::get('/admin/cms/{id}/edit', [CmsPageController::class, 'edit'])->name('cms.edit');
-    Route::put('/admin/cms/{id}', [CmsPageController::class, 'update'])->name('cms.update');
+    Route::get('/admin/cms/page', [CmsPageController::class, 'index'])->name('cms.index');
+    Route::get('/admin/cms/page/create', [CmsPageController::class, 'create'])->name('cms.create');
+    Route::post('/admin/cms/page/store', [CmsPageController::class, 'store'])->name('cms.store');
+    Route::delete('/admin/cms/page/{id}', [CmsPageController::class, 'destroy'])->name('cms.destroy');
+    Route::get('/admin/cms/page/{id}/edit', [CmsPageController::class, 'edit'])->name('cms.edit');
+    Route::put('/admin/cms/page/{id}', [CmsPageController::class, 'update'])->name('cms.update');
+
+    Route::get('/admin/cms/banner', [CmsPageController::class, 'bannerindex'])->name('cms.banner.index');
+    Route::get('/admin/cms/banner/create', [CmsPageController::class, 'createbanner'])->name('cms.banner.create');
+    Route::get('/admin/cms/banner/show', [CmsPageController::class, 'showbanner'])->name('cms.banner.show');
+    Route::post('/admin/cms/banner/store', [CmsPageController::class, 'storebanner'])->name('cms.banner.store');
+    Route::delete('/admin/cms/banner/{id}', [CmsPageController::class, 'destroybanner'])->name('cms.banner.destroy');
+    Route::get('/admin/cms/banner/{id}/edit', [CmsPageController::class, 'editbanner'])->name('cms.banner.edit');
+    Route::put('/admin/cms/banner/{id}', [CmsPageController::class, 'updatebanner'])->name('cms.banner.update');
 });
 
 /* Frontend CMS pages */
 Route::get('/{slug}', [CmsPageController::class, 'show'])->name('cms.show');
-Route::get('/documents/create', [UserController::class, 'createDocument'])->name('documents.create');
-Route::get('/documents/edit', [UserController::class, 'editDocument'])->name('documents.edit');
-Route::get('/documents/show/{id}', [UserController::class, 'showDocument'])->name('documents.show');
-Route::post('/documents/autosave', [UserController::class, 'autosave'])->name('documents.autosave');
 Route::get('/admin/documents', [UserController::class, 'documentsIndex'])->name('documents.index');
+Route::get('/documents/create', [UserController::class, 'createDocument'])->name('documents.create');
+Route::get('/documents/show/{id}', [UserController::class, 'showDocument'])->name('documents.show');
+Route::post('/documents/store', [UserController::class, 'storeDocument'])->name('documents.store');
+Route::get('/documents/print/{id}', [UserController::class, 'printDocument'])->name('documents.print');
+Route::get('/documents/edit/{id}', [UserController::class, 'editDocument'])->name('documents.edit');

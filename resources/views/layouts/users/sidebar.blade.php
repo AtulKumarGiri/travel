@@ -140,14 +140,29 @@
         <a class="d-flex justify-content-between align-items-center rotate-arrow collapsed"
             data-bs-toggle="collapse"
             href="#adminModule">
-            <span><i class="bi bi-gear me-2"></i> Settings</span>
+            <span><i class="bi bi-people me-2"></i> Users</span>
             <i class="bi bi-chevron-down small"></i>
         </a>
         <ul class="collapse ps-4" id="adminModule">
-            <li><a href="#">CMS</a></li>
             <li><a href="#">Manage Users</a></li>
             <li><a href="#">System Reports</a></li>
             <li><a href="#">Settings</a></li>
+        </ul>
+    </li>
+    <!-- CMS -->
+    <li class="nav-item sidebar-module">
+        <a class="d-flex justify-content-between align-items-center rotate-arrow collapsed"
+            data-bs-toggle="collapse"
+            href="#cmsModule">
+            <span><i class="bi bi-gear me-2"></i> CMS</span>
+            <i class="bi bi-chevron-down small"></i>
+        </a>
+        <ul class="collapse ps-4" id="cmsModule">
+            <li><a href="{{ route('cms.index') }}">Page</a></li>
+            <li><a href="{{ route('cms.banner.index') }}">Banners</a></li>
+            <li><a href="#">Top Locations</a></li>
+            <li><a href="#">Countries</a></li>
+            <li><a href="#">Packages</a></li>
         </ul>
     </li>
     @endif

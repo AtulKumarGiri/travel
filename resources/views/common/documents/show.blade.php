@@ -28,8 +28,18 @@
                 </a>
             @endif
 
-            <a href="{{ route('documents.index') }}" class="btn btn-secondary btn-sm">Back</a>
+            <a href="{{ route('documents.print', $document->id) }}"
+            class="btn btn-sm btn-success"
+            title="Print / Download PDF"
+            target="_blank">
+            <i class="bi bi-printer fs-6"></i>
+            </a>
+
+            <a href="{{ route('documents.index') }}" class="btn btn-secondary btn-sm">
+                Back
+            </a>
         </div>
+
     </div>
 
     <div class="card shadow-sm">

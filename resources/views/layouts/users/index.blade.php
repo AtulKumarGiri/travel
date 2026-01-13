@@ -163,27 +163,29 @@
 
         });
         document.addEventListener('DOMContentLoaded', function() {
-            let currentDocumentId = null; // tracks active document in modal
-            let autosaveTimer;
-            let isTyping = false;
             // ================= Initialize Summernote & Select2 =================
             $('#docDescription').summernote({
                 placeholder: 'Write details...',
                 tabsize: 2,
-                height: 300,
-                minHeight: 200,
+                height: 350,
+                minHeight: 250,
                 toolbar: [
-                    ['style', ['bold', 'italic', 'underline', 'clear']],
-                    ['font', ['fontsize', 'color']],
+                    ['style', ['style', 'bold', 'italic', 'underline', 'strikethrough', 'clear']],
+                    ['font', ['fontsize', 'color', 'highlight']],
                     ['para', ['ul', 'ol', 'paragraph']],
-                    ['insert', ['link', 'table']],
-                    ['view', ['codeview']]
-                ]
+                    ['table', ['table']],
+                    ['insert', ['picture', 'link', 'hr']],
+                    ['view', ['fullscreen', 'codeview', 'help']],
+                    ['misc', ['undo', 'redo']],
+                    ['excel', ['excelImport']], // custom
+                ],
             });
+
             $('#shareUsers').select2({
                 placeholder: "Share With Employees...",
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                padding: '10px',
             });
             // ================= Privacy Toggle =================
             function handlePrivacySwitch(){
@@ -200,46 +202,82 @@
             function showSavingStatus(){
                 $('#autosaveStatus').html('<i class="bi bi-arrow-repeat text-warning"></i> Saving...');
             }
+            let autosaveTimer = null;
+            let isTyping = false;
+            let currentDocumentId = null;   // important
+
+            function showSavingStatus(){
+                $('#autosaveStatus').html(`<i class="bi bi-arrow-repeat text-warning"></i> Saving...`);
+            }
+
             function triggerAutosave(){
                 clearTimeout(autosaveTimer);
                 autosaveTimer = setTimeout(autosaveDocument, 1500);
             }
-            function autosaveDocument(){
-                if(!isTyping) return;
-    
+
+            function autosaveDocument() {
+                if (!isTyping) return;
+
                 let title = $('#docTitle').val().trim();
-                let body = $('#docDescription').summernote('code').trim().replace(/<[^>]*>?/gm, '');
-                if(!title && !body) {
-                    return;
-                }
+                let bodyText = $('#docDescription').summernote('code').trim().replace(/<[^>]*>?/gm, '');
+
+                // Nothing to save?
+                if (!title && !bodyText) return;
+
                 let payload = {
-                    document_id: currentDocumentId,
+                    document_id: currentDocumentId ?? null,
                     title: $('#docTitle').val(),
                     body: $('#docDescription').summernote('code'),
                     type: $('#docType').val(),
                     shared_with: $('#shareUsers').val(),
                     is_private: $('input[name="privacyOptions"]:checked').val() === 'private' ? 1 : 0,
-                    _token: '{{ csrf_token() }}'
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 };
-                $.post("{{ route('documents.autosave') }}", payload, function(response){
-                    if(response.status === 'saved'){
-                        $('#autosaveStatus').html(`<i class="bi bi-check-circle-fill text-success"></i> Saved at ${new Date(response.updated_at).toLocaleTimeString()}`);
-                        currentDocumentId = response.document_id;
-                        isTyping = false;
-                    }
-                });
+
+                let url = currentDocumentId
+                    ? "/documents/update"  // update existing
+                    : "/documents/store";  // create new
+
+                $.post(url, payload)
+                    .done(function (response) {
+
+                        // Backend must return status = "saved"
+                        if (response.status === 'saved' || response.status === 'success') {
+
+                            // assign id if newly created
+                            currentDocumentId = response.document_id;
+
+                            let time = response.updated_at
+                                ? new Date(response.updated_at).toLocaleTimeString()
+                                : new Date().toLocaleTimeString();
+
+                            $('#autosaveStatus').html(
+                                `<i class="bi bi-check-circle-fill text-success"></i> Saved at ${time}`
+                            );
+
+                            isTyping = false;
+                        }
+                    })
+                    .fail(function (xhr) {
+                        console.error("Autosave error:", xhr.responseText);
+                        $('#autosaveStatus').html(`<span class="text-danger">Autosave failed</span>`);
+                    });
             }
-            // Track changes
-            $('#docTitle, #docType, #shareUsers').on('input change', function(){
+
+
+            // EVENT TRACKERS (Triggers autosave)
+            $('#docTitle, #docType, #shareUsers, input[name="privacyOptions"]').on('input change', function(){
                 isTyping = true;
                 showSavingStatus();
                 triggerAutosave();
             });
+
             $('#docDescription').on('summernote.change', function(){
                 isTyping = true;
                 showSavingStatus();
                 triggerAutosave();
             });
+
             // ================= Modal Open / Close =================
             $('#createDocumentModal').on('shown.bs.modal', function () {
                 // Reset modal fields for a new document
@@ -264,7 +302,7 @@
                     is_private: $('input[name="privacyOptions"]:checked').val() === 'private' ? 1 : 0,
                     _token: '{{ csrf_token() }}'
                 };
-                $.post("{{ route('documents.autosave') }}", payload, function(response){
+                $.post("{{ route('documents.store') }}", payload, function(response){
                     if(response.status === 'saved'){
                         $('#autosaveStatus').html(`<i class="bi bi-check-circle-fill text-success"></i> Saved at ${new Date(response.updated_at).toLocaleTimeString()}`);
                         currentDocumentId = null; // Reset for next document
@@ -273,6 +311,97 @@
                 });
             });
         });
+
+        const permissionOptions = `
+            <option value="View">View</option>
+            <option value="Edit">Edit</option>
+            <option value="Comment">Comment</option>
+            <option value="Download">Download</option>
+        `;
+
+        $('#shareUsers').on('change', function(){
+            const selectedUsers = $(this).val() || [];
+            const container = $('#userPermissions');
+            container.empty();
+
+            selectedUsers.forEach(userId => {
+                const userName = $('#shareUsers option[value="'+userId+'"]').text();
+                container.append(`
+                    <div class="d-flex align-items-center mb-1">
+                        <span class="small me-2 fw-bold">${userName}</span>
+                        <select name="permissions[${userId}]" class="form-select form-select-sm" style="width:140px;">
+                            ${permissionOptions}
+                        </select>
+                    </div>
+                `);
+            });
+        });
+
+        let selectedPermissions = {}; // { userId: ['view','edit'] }
+        let currentUserId = null;
+
+        const permissionModal = new bootstrap.Modal(document.getElementById('permissionModal'));
+
+        $('#shareUsers').on('change', function() {
+            const selected = $(this).val() || [];
+
+            selected.forEach(id => {
+                if(!selectedPermissions[id]) {
+                    currentUserId = id;
+                    $('#selectedUserName').text($('#shareUsers option[value="'+id+'"]').text());
+                    $('.perm-check').prop('checked', false);
+                    permissionModal.show();
+                }
+            });
+
+            renderPermissions();
+        });
+
+        $('#savePermissions').on('click', function() {
+            const perms = [];
+            $('.perm-check:checked').each(function() {
+                perms.push($(this).val());
+            });
+
+            if(perms.length === 0){
+                alert("Select at least one permission");
+                return;
+            }
+
+            selectedPermissions[currentUserId] = perms;
+            permissionModal.hide();
+            renderPermissions();
+        });
+
+        function renderPermissions(){
+            const container = $('#userPermissions');
+            container.empty();
+
+            Object.keys(selectedPermissions).forEach(id => {
+                const name = $('#shareUsers option[value="'+id+'"]').text();
+                const perms = selectedPermissions[id]
+                    .map(p => `<span class="badge bg-info text-dark me-1">${p}</span>`)
+                    .join('');
+
+                container.append(`
+                    <div class="mb-1 small d-flex justify-content-between align-items-center">
+                        <span>${name}: ${perms}</span>
+                        <button class="btn btn-sm btn-danger remove-user" data-id="${id}"><i class="bi bi-x"></i></button>
+                    </div>
+                `);
+            });
+        }
+
+        $(document).on('click','.remove-user',function(){
+            const id = $(this).data('id');
+            delete selectedPermissions[id];
+
+            let values = $('#shareUsers').val();
+            values = values.filter(v => v != id);
+            $('#shareUsers').val(values).trigger('change');
+        });
+
+
     </script>
 
 

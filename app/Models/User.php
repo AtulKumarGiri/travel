@@ -44,4 +44,11 @@ class User extends Authenticatable
         'logged_in'      => 'boolean',
         'password'       => 'hashed',
     ];
+
+    public function sharedDocuments(){
+        return $this->belongsToMany(Documents::class, 'document_user')
+            ->withPivot(['shared_by', 'permission'])
+            ->withTimestamps();
+    }
+
 }
